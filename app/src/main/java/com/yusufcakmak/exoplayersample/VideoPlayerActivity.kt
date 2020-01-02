@@ -5,21 +5,22 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.ExoPlayerFactory
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioListener
+import com.google.android.exoplayer2.source.ClippingMediaSource
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.google.android.exoplayer2.source.LoopingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.text.Cue
 import com.google.android.exoplayer2.text.TextOutput
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.video.VideoListener
 
-class VideoPlayerActivity : AppCompatActivity(),Player.EventListener{
+class VideoPlayerActivity : Activity(),Player.EventListener{
     companion object {
         const val STREAM_URL = "rtmp://172.168.2.5/vod/mp4:sample1_150kbps.f4v"
     }
@@ -51,10 +52,18 @@ class VideoPlayerActivity : AppCompatActivity(),Player.EventListener{
         mediaDataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "mediaPlayerSample"))
        // 创建一个常规媒体文件的播放源
         val mediaSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(Uri.parse(STREAM_URL))
+        // 创建一个剪辑视频源
+        val clippingSource = ClippingMediaSource(mediaSource,5000000)
+        // 创建一个循环播放的视频源
+        val LoopingSource = LoopingMediaSource(mediaSource,3)
+        // 创建一个组合数据源
+        val fristSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(Uri.parse(STREAM_URL))
+        val secondSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(Uri.parse(STREAM_URL))
+        val looping = LoopingMediaSource(fristSource,5)
+        val concatenateSource = ConcatenatingMediaSource(fristSource,looping)
         with(player) {
             prepare(mediaSource, false, false)
             playWhenReady
-            repeatMode
         }
         playerView.setShutterBackgroundColor(Color.TRANSPARENT)
         playerView.player = player
