@@ -5,16 +5,24 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.audio.AudioListener
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.text.Cue
+import com.google.android.exoplayer2.text.TextOutput
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.video.VideoListener
 
-class VideoPlayerActivity : AppCompatActivity() {
+class VideoPlayerActivity : AppCompatActivity(),Player.EventListener{
+    companion object {
+        const val STREAM_URL = "rtmp://172.168.2.5/vod/mp4:sample1_150kbps.f4v"
+    }
     //创建一个SimpleExoPlayer实例 用于视频和用户输入
     private lateinit var player: SimpleExoPlayer
     // medirSource 媒体数据源工厂创建方法
@@ -30,6 +38,15 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun initializePlayer() {
 
         player = ExoPlayerFactory.newSimpleInstance(this)
+        //监听播放状态
+        player.addListener(this)
+        // 收到字幕或者是字幕提示更改的监听
+        player.addTextOutput{
+            it.add(Cue("这是字幕数据"))
+        }
+        player.addVideoListener(object :VideoListener{
+            //内部包含一定的默认的实现的方法
+        })
         playerView = findViewById(R.id.playerView)
         mediaDataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "mediaPlayerSample"))
        // 创建一个常规媒体文件的播放源
@@ -71,8 +88,25 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         if (Util.SDK_INT > 23) releasePlayer()
     }
+    /**
+     * @description  播放出错的时候的回调
+     * @param  播放出错的异常数据
+     * @return  null
+     * @author 18734
+     * @time 2020/1/2 14:03
+     */
+    override fun onPlayerError(error: ExoPlaybackException?) {
 
-    companion object {
-        const val STREAM_URL = "rtmp://172.168.2.5/vod/mp4:sample1_150kbps.f4v"
     }
+    /**
+     * @description 播放的状态发生变化的时候的回调
+     * @param 1
+     * @param 2 当前的播放的状态
+     * @return  null
+     * @author 18734
+     * @time 2020/1/2 14:04
+     */
+    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+    }
+
 }
